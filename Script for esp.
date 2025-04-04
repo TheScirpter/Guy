@@ -1,0 +1,148 @@
+-- Roblox ESP Hack GUI
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+
+-- Create main GUI frame
+local espGUI = Instance.new("ScreenGui")
+espGUI.Name = "NeonHackESP"
+espGUI.Parent = playerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 350, 0, 200)
+mainFrame.Position = UDim2.new(0.5, -175, 0.5, -100)
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
+mainFrame.BackgroundTransparency = 0.2
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = espGUI
+
+-- Add glowing border effect
+local borderGlow = Instance.new("Frame")
+borderGlow.Name = "BorderGlow"
+borderGlow.Size = UDim2.new(1, 10, 1, 10)
+borderGlow.Position = UDim2.new(0, -5, 0, -5)
+borderGlow.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+borderGlow.BackgroundTransparency = 0.7
+borderGlow.BorderSizePixel = 0
+borderGlow.ZIndex = -1
+borderGlow.Parent = mainFrame
+
+-- Title text
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Text = "NEURAL HACK v3.1.7"
+title.Size = UDim2.new(1, 0, 0, 40)
+title.Position = UDim2.new(0, 0, 0, 10)
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(0, 200, 255)
+title.Font = Enum.Font.SciFi
+title.TextSize = 24
+title.Parent = mainFrame
+
+-- ESP Toggle Button
+local espButton = Instance.new("TextButton")
+espButton.Name = "ESPButton"
+espButton.Text = "ACTIVATE ESP"
+espButton.Size = UDim2.new(0, 200, 0, 50)
+espButton.Position = UDim2.new(0.5, -100, 0.5, -25)
+espButton.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
+espButton.TextColor3 = Color3.fromRGB(0, 255, 200)
+espButton.Font = Enum.Font.Code
+espButton.TextSize = 18
+espButton.Parent = mainFrame
+
+-- Status label
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Name = "Status"
+statusLabel.Text = "STATUS: READY"
+statusLabel.Size = UDim2.new(1, -20, 0, 30)
+statusLabel.Position = UDim2.new(0, 10, 1, -40)
+statusLabel.BackgroundTransparency = 1
+statusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+statusLabel.Font = Enum.Font.SourceSansBold
+statusLabel.TextSize = 16
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.Parent = mainFrame
+
+-- ESP Functionality
+local espEnabled = false
+local espHighlights = {}
+
+local function createESP(player)
+    if player == localPlayer then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESP_Highlight"
+    highlight.FillColor = Color3.fromRGB(255, 50, 50)
+    highlight.FillTransparency = 0.7
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.OutlineTransparency = 0
+    highlight.Adornee = player.Character
+    highlight.Parent = player.Character or player:WaitForChild("Character")
+    
+    espHighlights[player] = highlight
+end
+
+local function removeESP(player)
+    if espHighlights[player] then
+        espHighlights[player]:Destroy()
+        espHighlights[player] = nil
+    end
+end
+
+local function toggleESP()
+    espEnabled = not espEnabled
+    
+    if espEnabled then
+        espButton.Text = "DEACTIVATE ESP"
+        statusLabel.Text = "STATUS: ESP ACTIVE"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+        
+        -- Add ESP to existing players
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player.Character then
+                createESP(player)
+            end
+        end
+    else
+        espButton.Text = "ACTIVATE ESP"
+        statusLabel.Text = "STATUS: READY"
+        statusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+        
+        -- Remove all ESP highlights
+        for player, _ in pairs(espHighlights) do
+            removeESP(player)
+        end
+    end
+end
+
+-- Connect button click
+espButton.MouseButton1Click:Connect(toggleESP)
+
+-- Handle player joining/leaving
+Players.PlayerAdded:Connect(function(player)
+    if espEnabled then
+        player.CharacterAdded:Connect(function(character)
+            createESP(player)
+        end)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    removeESP(player)
+end)
+
+-- Initial setup for existing players
+if espEnabled then
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character then
+            createESP(player)
+        else
+            player.CharacterAdded:Connect(function(character)
+                createESP(player)
+            end)
+        end
+    end
+end
